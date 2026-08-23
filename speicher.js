@@ -17,9 +17,18 @@
       art: 'probe',
       name: 'Probelauf auf diesem Gerät',
       async struktur() {
-        const r = await fetch('../struktur.json', { cache: 'no-store' });
-        if (!r.ok) throw new Error('struktur.json nicht gefunden (' + r.status + ')');
-        return r.json();
+        // Je nachdem, wo die App liegt: neben ihr (Internet-Adresse) oder eine Ebene
+        // darüber (lokaler Server, App in /app/).
+        for (const ort of ['./struktur.json', '../struktur.json']) {
+          try {
+            const r = await fetch(ort, { cache: 'no-store' });
+            if (r.ok) return await r.json();
+          } catch (e) { /* nächster Ort */ }
+        }
+        throw new Error('Der Probelauf braucht die Inhaltsdatei struktur.json, und die liegt '
+          + 'nicht neben der App. Unter der Internet-Adresse ist das Absicht — die Inhalte '
+          + 'gehören in die Dropbox, nicht auf einen Webserver. Nimm für den echten Betrieb '
+          + 'Dropbox, oder für einen Blick ohne Anmeldung „Ordner auf diesem Gerät".');
       },
       async lies(datei) { return localStorage.getItem(K + datei); },
       async anhaengen(datei, zeilen) {
