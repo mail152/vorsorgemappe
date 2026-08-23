@@ -1,0 +1,144 @@
+/* Vorsorgemappe — „Leinen, kontraststark“
+   Alle Farben gegen das Blatt #FBF8F1 gemessen, siehe Musterseiten.html */
+:root{
+  --ordner:#E2DCCC;  --blatt:#FBF8F1;
+  --tinte:#14161A;   --zweit:#3A4046;  --etikett:#5D6369;
+  --linie:#8B8371;   --trenn:#D3CCBA;
+  --akzent:#1F4A3C;  --akzent-bg:#DCE7E1;
+  --signal:#8E3418;  --signal-bg:#F3E1D8;
+  --serif:"Iowan Old Style","Charter","Palatino Linotype",Palatino,ui-serif,Georgia,serif;
+  --sans:"Avenir Next","Avenir","Segoe UI",system-ui,-apple-system,sans-serif;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  --gr:1;                      /* Schriftgrößen-Regler */
+}
+*{box-sizing:border-box}
+html{font-size:calc(16px * var(--gr))}
+body{margin:0;background:var(--ordner);color:var(--tinte);
+     font-family:var(--sans);font-size:1rem;line-height:1.5;-webkit-font-smoothing:antialiased}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2.5px solid var(--akzent);outline-offset:2px;border-radius:2px}
+
+/* ---------- Kopfzeile ---------- */
+.kopf{display:flex;align-items:center;gap:.75rem;padding:.6rem 1rem;background:var(--blatt);
+      border-bottom:1px solid var(--trenn);position:sticky;top:0;z-index:20;flex-wrap:wrap}
+.marke{font-weight:700;letter-spacing:-.01em}
+.modi{display:flex;gap:.2rem;margin-left:auto}
+.modi button{font-size:.62rem;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+             padding:.25rem .6rem;border:0;border-radius:3px;background:transparent;color:var(--etikett)}
+.modi button[aria-pressed="true"]{background:var(--akzent);color:var(--blatt)}
+.modi button:disabled{opacity:.45;cursor:not-allowed}
+.stand{display:flex;align-items:center;gap:.4rem;font-size:.7rem;color:var(--etikett)}
+.pip{width:.45rem;height:.45rem;border-radius:50%;background:var(--akzent);flex:none}
+.pip.warte{background:var(--signal)}
+.knopf{border:1.5px solid var(--linie);background:transparent;border-radius:4px;
+       padding:.25rem .6rem;font-size:.72rem;font-weight:600}
+.knopf:hover{border-color:var(--akzent);color:var(--akzent)}
+.knopf.stark{background:var(--akzent);border-color:var(--akzent);color:var(--blatt)}
+
+/* ---------- Gerüst ---------- */
+.raum{display:grid;grid-template-columns:15rem minmax(0,1fr);gap:1rem;
+      max-width:74rem;margin:0 auto;padding:1rem}
+@media (max-width:820px){.raum{grid-template-columns:1fr}}
+
+.rail{background:var(--blatt);border-radius:6px;padding:.7rem;align-self:start;
+      position:sticky;top:3.6rem;max-height:calc(100vh - 4.6rem);overflow-y:auto}
+.rail h2{font-size:.62rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;
+         color:var(--etikett);margin:.7rem .4rem .35rem}
+.rail h2:first-child{margin-top:.2rem}
+.rail button{display:flex;align-items:center;gap:.5rem;width:100%;text-align:left;border:0;
+             background:transparent;border-radius:4px;padding:.34rem .4rem;font-size:.82rem;color:var(--zweit)}
+.rail button:hover{background:var(--ordner)}
+.rail button[aria-current="true"]{background:var(--akzent);color:var(--blatt);font-weight:600}
+.rail .ring{width:.85rem;height:.85rem;flex:none;border-radius:50%;border:1.5px solid var(--linie);
+            display:grid;place-items:center;font-size:.5rem}
+.rail button[aria-current="true"] .ring{border-color:var(--blatt)}
+.rail .ring.voll{background:var(--akzent);border-color:var(--akzent)}
+.rail button[aria-current="true"] .ring.voll{background:var(--blatt)}
+.rail .ring.teil{background:linear-gradient(to top,var(--akzent) 50%,transparent 50%)}
+
+/* ---------- Blatt ---------- */
+.blatt{background:var(--blatt);border-radius:6px;padding:1.5rem 1.6rem 1.7rem}
+.kap-nr{font-size:.62rem;font-weight:700;letter-spacing:.13em;text-transform:uppercase;color:var(--etikett)}
+.kap-titel{font-family:var(--serif);font-size:1.7rem;line-height:1.15;font-weight:600;
+           margin:.2rem 0 0;letter-spacing:-.015em}
+.kap-ein{font-family:var(--serif);font-style:italic;color:var(--zweit);margin:.5rem 0 0;
+         font-size:1rem;line-height:1.5;max-width:38rem}
+.kap-leiste{display:flex;align-items:center;gap:.6rem;margin-top:.9rem;
+            padding-top:.7rem;border-top:1px solid var(--trenn)}
+.balken{flex:1;height:.4rem;border-radius:3px;background:var(--trenn);overflow:hidden}
+.balken i{display:block;height:100%;background:var(--akzent);transition:width .25s}
+.balken-t{font-size:.7rem;color:var(--etikett);font-variant-numeric:tabular-nums;white-space:nowrap}
+
+/* ---------- Feld ---------- */
+.feld{padding:1.05rem 0;border-bottom:1px solid var(--trenn)}
+.feld:last-of-type{border-bottom:0}
+.feld-kopf{display:flex;gap:.6rem;align-items:baseline;flex-wrap:wrap}
+.frage{font-family:var(--serif);font-size:1.08rem;line-height:1.35;flex:1 1 20rem;min-width:0}
+.feld.ist-hinweis .frage{font-style:italic;color:var(--zweit);font-size:1rem}
+.marken{display:flex;gap:.22rem;flex-wrap:wrap}
+.marke-k{font-size:.56rem;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+         padding:.12rem .38rem;border-radius:3px;white-space:nowrap}
+.m-gem{background:var(--akzent);color:var(--blatt)}
+.m-ges{background:transparent;border:1.5px solid var(--linie);color:var(--zweit)}
+.m-map{background:var(--akzent-bg);color:var(--akzent)}
+.hilfe{font-size:.8rem;color:var(--zweit);margin-top:.4rem;border-left:2px solid var(--trenn);
+       padding-left:.7rem;line-height:1.5;max-width:38rem}
+
+input[type=text],input[type=date],textarea{
+  width:100%;font-family:var(--serif);font-size:1rem;color:var(--tinte);
+  background:transparent;border:0;border-bottom:1.5px solid var(--linie);
+  padding:.35rem 0;margin-top:.55rem;border-radius:0}
+textarea{resize:vertical;min-height:4.2rem;line-height:1.5}
+input:focus,textarea:focus{outline:0;border-bottom-color:var(--akzent);border-bottom-width:2px}
+input::placeholder,textarea::placeholder{color:var(--etikett);font-style:italic}
+
+.wahl{display:flex;flex-direction:column;gap:.1rem;margin-top:.55rem}
+.wahl label{display:flex;align-items:flex-start;gap:.55rem;padding:.3rem .4rem;border-radius:4px;
+            font-size:.95rem;color:var(--zweit);cursor:pointer}
+.wahl label:hover{background:var(--ordner)}
+.wahl input{accent-color:var(--akzent);margin:.25rem 0 0;width:1rem;height:1rem;flex:none}
+.wahl input:checked ~ span{color:var(--tinte);font-weight:600}
+
+.zeilen{display:flex;flex-direction:column;gap:.3rem;margin-top:.55rem}
+.zeile{display:flex;gap:.5rem;align-items:center}
+.zeile input{margin-top:0}
+.zeile button{border:0;background:transparent;color:var(--etikett);font-size:1rem;
+              line-height:1;padding:.2rem .35rem;border-radius:3px}
+.zeile button:hover{background:var(--signal-bg);color:var(--signal)}
+.mehr{align-self:flex-start;margin-top:.15rem;border:1.5px dashed var(--linie);background:transparent;
+      border-radius:4px;padding:.25rem .6rem;font-size:.74rem;color:var(--zweit)}
+.mehr:hover{border-color:var(--akzent);color:var(--akzent);border-style:solid}
+
+.kontakt{display:grid;grid-template-columns:repeat(auto-fit,minmax(13rem,1fr));gap:0 1rem;margin-top:.3rem}
+.kontakt label{display:block}
+.kontakt span{font-size:.68rem;color:var(--etikett);font-weight:600}
+
+.schloss{margin-top:.55rem;display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;
+         background:var(--ordner);border-radius:5px;padding:.55rem .7rem}
+.schloss p{margin:0;font-size:.8rem;color:var(--zweit)}
+
+/* ---------- Fuß ---------- */
+.fuss{display:flex;justify-content:space-between;gap:1rem;align-items:center;
+      margin-top:1.3rem;padding-top:.9rem;border-top:1px solid var(--trenn);flex-wrap:wrap}
+.fuss-t{font-size:.75rem;color:var(--etikett)}
+
+/* ---------- Einrichtung / Dialoge ---------- */
+.mitte{max-width:34rem;margin:3rem auto;padding:0 1rem}
+.karte{background:var(--blatt);border-radius:6px;padding:1.8rem 1.9rem}
+.karte h1{font-family:var(--serif);font-size:1.9rem;line-height:1.13;margin:0 0 .2rem;font-weight:600;
+          letter-spacing:-.015em}
+.karte p{color:var(--zweit);font-size:.95rem;margin:.5rem 0}
+.karte label{display:block;margin-top:1rem}
+.karte label>span{font-size:.7rem;font-weight:700;letter-spacing:.05em;color:var(--etikett)}
+.wege{display:flex;flex-direction:column;gap:.5rem;margin-top:1.1rem}
+.weg{display:flex;gap:.8rem;align-items:flex-start;text-align:left;width:100%;
+     border:1.5px solid var(--linie);background:transparent;border-radius:5px;padding:.8rem .9rem}
+.weg:hover{border-color:var(--akzent)}
+.weg b{display:block;font-size:.92rem}
+.weg em{font-style:normal;font-size:.8rem;color:var(--zweit);display:block;margin-top:.15rem}
+.fehler{background:var(--signal-bg);color:var(--signal);border-radius:5px;padding:.7rem .85rem;
+        font-size:.85rem;margin-top:1rem}
+.fehler b{display:block;font-size:.65rem;letter-spacing:.1em;text-transform:uppercase;margin-bottom:.2rem}
+.reihe{display:flex;gap:.6rem;align-items:center;margin-top:1.2rem;flex-wrap:wrap}
+input[type=range]{accent-color:var(--akzent)}
+.leise{color:var(--etikett);font-size:.75rem}
