@@ -67,6 +67,10 @@ function falten(zeilen) {
 
 async function ladeZustand() {
   S.zustand.clear();
+  try {
+    const gefunden = S.speicher.personen ? await S.speicher.personen() : [];
+    S.andere = gefunden.filter((p) => p !== S.person);
+  } catch (e) { S.andere = S.andere || []; }
   const dateien = [S.person, ...(S.andere || [])].filter(Boolean);
   for (const p of dateien) {
     const text = await S.speicher.lies(Speicher.DATEI.log(p));
@@ -194,6 +198,18 @@ async function entsperreAlles() {
 
 /* ───────────────────────── Ansicht: Felder ───────────────────────── */
 
+function wannText(iso) {
+  const d = new Date(iso), jetzt = new Date(), s = (jetzt - d) / 1000;
+  if (s < 90) return 'gerade eben';
+  if (s < 3600) return 'vor ' + Math.round(s / 60) + ' Minuten';
+  if (d.toDateString() === jetzt.toDateString())
+    return 'heute ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  const gestern = new Date(jetzt); gestern.setDate(gestern.getDate() - 1);
+  if (d.toDateString() === gestern.toDateString())
+    return 'gestern ' + d.toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', year: '2-digit' });
+}
+
 function marken(f) {
   const m = [];
   if (istGemeinsam(f)) m.push('<span class="marke-k m-gem">gemeinsam</span>');
@@ -283,6 +299,13 @@ function baueFeld(f) {
   }
 
   if (f.hilfe) el.append($(`<div class="hilfe">${esc(f.hilfe)}</div>`));
+
+  const e = S.zustand.get(schluesselVon(f));
+  if (e && e.von && e.zeit && f.typ !== 'hinweis') {
+    const fremd = e.von !== S.person;
+    el.append($(`<div class="herkunft${fremd ? ' fremd' : ''}">${
+      fremd ? 'von ' + esc(e.von) : 'von dir'} · ${esc(wannText(e.zeit))}</div>`));
+  }
   return el;
 }
 
@@ -316,8 +339,13 @@ function zeichneKapitel() {
   if (!el) return;
   const p = fortschritt(k);
   el.innerHTML = '';
-  el.append($(`<div><div class="kap-nr">Kapitel ${S.kapitel + 1} von ${S.struktur.kapitel.length}${
-    k.zugehoerigkeit === 'gemeinsam' ? ' · ganzes Kapitel gemeinsam' : ''}</div>
+  // Nur behaupten, was stimmt: „ganz gemeinsam" gilt erst, wenn jedes Eingabefeld es ist.
+  const eingaben = k.felder.filter((f) => f.typ !== 'hinweis');
+  const anzahlGem = eingaben.filter(istGemeinsam).length;
+  const zusatz = anzahlGem === 0 ? ''
+    : anzahlGem === eingaben.length ? ' · ganzes Kapitel gemeinsam'
+    : ` · ${anzahlGem} von ${eingaben.length} Fragen gemeinsam`;
+  el.append($(`<div><div class="kap-nr">Kapitel ${S.kapitel + 1} von ${S.struktur.kapitel.length}${zusatz}</div>
     <h1 class="kap-titel">${esc(k.titel)}</h1>
     <p class="kap-ein">${esc(k.einleitung)}</p></div>`));
   el.append($(`<div class="kap-leiste"><div class="balken"><i style="width:${Math.round(p.teil * 100)}%"></i></div>
@@ -347,6 +375,7 @@ function zeichneApp() {
   const kopf = $(`<header class="kopf">
       <span class="marke">Vorsorgemappe</span>
       <span class="stand" id="stand"><span class="pip"></span>gespeichert</span>
+      <span class="anwesend" id="anwesend"></span>
       <div class="modi">
         <button aria-pressed="true">Vorsorge</button>
         <button disabled title="kommt in Etappe 5">Ernstfall</button>
@@ -373,6 +402,85 @@ function zeichneApp() {
   setzeGr(0);
 
   zeichneRail(); zeichneKapitel();
+}
+
+/* ───────────────────────── Zu zweit ─────────────────────────
+   Anwesenheit: eine winzige Datei je Person, alle 20 Sekunden neu geschrieben.
+   Wache: Dropbox meldet Änderungen im Ordner; sonst schauen wir alle 20 s nach. */
+
+async function anwesenheitMelden() {
+  if (!S.speicher || !S.speicher.schreib) return;
+  const k = S.struktur.kapitel[S.kapitel];
+  try {
+    await S.speicher.schreib(`anwesend-${S.person}.json`, JSON.stringify({
+      person: S.person, kapitel: k ? k.titel : null, zeit: new Date().toISOString(),
+    }));
+  } catch (e) { /* nicht wichtig genug für eine Meldung */ }
+}
+
+async function anwesenheitLesen() {
+  const raus = [];
+  for (const p of (S.andere || [])) {
+    try {
+      const t = await S.speicher.lies(`anwesend-${p}.json`);
+      if (!t) continue;
+      const d = JSON.parse(t);
+      if ((new Date() - new Date(d.zeit)) / 1000 < 90) raus.push(d);   // älter = nicht mehr da
+    } catch (e) { /* still */ }
+  }
+  return raus;
+}
+
+function zeigeAnwesend(liste) {
+  const el = document.getElementById('anwesend');
+  if (!el) return;
+  if (!liste.length) { el.textContent = ''; return; }
+  el.innerHTML = liste.map((d) => `<span class="wer-da"><span class="punkt"></span>${
+    esc(d.person)}${d.kapitel ? ' · ' + esc(d.kapitel) : ''}</span>`).join('');
+}
+
+/* Fremde Änderung übernehmen, ohne dem Tippenden ins Handwerk zu pfuschen. */
+async function fremdesUebernehmen() {
+  const aktiv = document.activeElement;
+  const tippt = aktiv && /^(INPUT|TEXTAREA)$/.test(aktiv.tagName);
+  await ladeZustand();
+  if (S.schluessel) await entsperreAlles();
+  if (tippt) { aktualisiereFortschritt(); zeigeHinweisNeu(); }
+  else { zeichneKapitel(); zeichneRail(); }
+}
+
+function zeigeHinweisNeu() {
+  const el = document.getElementById('stand');
+  if (!el) return;
+  el.innerHTML = '<span class="pip"></span>Änderung von außen — erscheint, sobald du das Feld verlässt';
+}
+
+async function wacheStarten() {
+  // Anwesenheit
+  anwesenheitMelden();
+  zeigeAnwesend(await anwesenheitLesen());
+  setInterval(async () => { anwesenheitMelden(); zeigeAnwesend(await anwesenheitLesen()); }, 20000);
+
+  // Änderungen: bei Dropbox über longpoll, sonst regelmäßig nachsehen
+  if (S.speicher.warteAufAenderung && S.speicher.cursor) {
+    let cur = null;
+    (async function runde() {
+      try {
+        if (!cur) cur = await S.speicher.cursor();
+        if (!cur) throw new Error('kein Cursor');
+        const geaendert = await S.speicher.warteAufAenderung(cur, 30);
+        cur = await S.speicher.cursor();
+        if (geaendert) await fremdesUebernehmen();
+      } catch (e) {
+        cur = null;
+        await new Promise((r) => setTimeout(r, 20000));   // Rückfallweg
+        try { await fremdesUebernehmen(); } catch (e2) { /* still */ }
+      }
+      runde();
+    })();
+  } else {
+    setInterval(() => fremdesUebernehmen().catch(() => {}), 20000);
+  }
 }
 
 /* ───────────────────────── Einrichtung ───────────────────────── */
@@ -526,6 +634,7 @@ async function start() {
   } catch (e) { return wegDialog(e.message); }
   await ladeZustand();
   zeichneApp();
+  if (!S.wacheLaeuft) { S.wacheLaeuft = true; wacheStarten(); }
 }
 
 (async function () {

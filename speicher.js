@@ -36,6 +36,12 @@
         localStorage.setItem(K + datei, alt + zeilen.map((z) => JSON.stringify(z) + '\n').join(''));
       },
       async schreib(datei, text) { localStorage.setItem(K + datei, text); },
+      async personen() {
+        return Object.keys(localStorage)
+          .map((k) => (k.startsWith(K) ? k.slice(K.length) : null))
+          .filter((n) => n && /^ereignisse-(.+)\.jsonl$/.test(n))
+          .map((n) => n.match(/^ereignisse-(.+)\.jsonl$/)[1]);
+      },
     };
   }
 
@@ -55,6 +61,14 @@
       async anhaengen(datei, zeilen) {
         const alt = (await this.lies(datei)) || '';
         await this.schreib(datei, alt + zeilen.map((z) => JSON.stringify(z) + '\n').join(''));
+      },
+      async personen() {
+        const raus = [];
+        for await (const [name] of griff.entries()) {
+          const m = name.match(/^ereignisse-(.+)\.jsonl$/);
+          if (m) raus.push(m[1]);
+        }
+        return raus;
       },
       async schreib(datei, text) {
         const h = await griff.getFileHandle(datei, { create: true });
@@ -189,6 +203,33 @@
       async anhaengen(datei, zeilen) {
         const alt = (await this.lies(datei)) || '';
         await this.schreib(datei, alt + zeilen.map((z) => JSON.stringify(z) + '\n').join(''));
+      },
+
+      async personen() {
+        const r = await rpc('https://api.dropboxapi.com/2/files/list_folder', { path: pfad.replace(/\/$/, '') });
+        if (!r.ok) return [];
+        return (await r.json()).entries
+          .map((e) => (e.name.match(/^ereignisse-(.+)\.jsonl$/) || [])[1])
+          .filter(Boolean);
+      },
+
+      /* Cursor auf den jetzigen Stand des Ordners. */
+      async cursor() {
+        const r = await rpc('https://api.dropboxapi.com/2/files/list_folder/get_latest_cursor',
+          { path: pfad.replace(/\/$/, '') });
+        if (!r.ok) return null;
+        return (await r.json()).cursor;
+      },
+
+      /* Wartet, bis sich im Ordner etwas rührt — bis zu 30 Sekunden.
+         Der longpoll-Dienst braucht keine Anmeldung, der Cursor ist der Ausweis. */
+      async warteAufAenderung(cur, sekunden) {
+        const r = await fetch('https://notify.dropboxapi.com/2/files/list_folder/longpoll', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ cursor: cur, timeout: sekunden || 30 }),
+        });
+        if (!r.ok) throw new Error('longpoll: ' + r.status);
+        return (await r.json()).changes === true;
       },
 
       async schreib(datei, text) {

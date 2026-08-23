@@ -142,3 +142,11 @@ input::placeholder,textarea::placeholder{color:var(--etikett);font-style:italic}
 .reihe{display:flex;gap:.6rem;align-items:center;margin-top:1.2rem;flex-wrap:wrap}
 input[type=range]{accent-color:var(--akzent)}
 .leise{color:var(--etikett);font-size:.75rem}
+
+/* ---------- zu zweit ---------- */
+.herkunft{font-size:.68rem;color:var(--etikett);margin-top:.4rem}
+.herkunft.fremd{color:var(--akzent);font-weight:600}
+.anwesend{display:flex;gap:.6rem;align-items:center;flex-wrap:wrap}
+.wer-da{display:flex;align-items:center;gap:.3rem;font-size:.7rem;color:var(--akzent);
+        background:var(--akzent-bg);border-radius:99px;padding:.12rem .5rem}
+.punkt{width:.4rem;height:.4rem;border-radius:50%;background:var(--akzent);flex:none}
