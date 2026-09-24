@@ -132,7 +132,7 @@
 
   /* Geschäftskonten haben zwei Wurzeln: den eigenen Mitgliedsordner (home) und die
      Team-Wurzel (root). Die Schnittstelle rechnet Pfade standardmäßig gegen home —
-     ein geteilter Ordner wie /Astrid liegt aber an der Team-Wurzel und ist von dort
+     ein geteilter Ordner liegt aber an der Team-Wurzel und ist von dort
      aus nicht zu finden. Der Kopf Dropbox-API-Path-Root stellt das um. */
   async function wurzelBestimmen(token) {
     const r = await fetch('https://api.dropboxapi.com/2/users/get_current_account', {

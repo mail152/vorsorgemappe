@@ -586,7 +586,7 @@ function dropboxDialog() {
     <p>und setze die Berechtigungen <code>files.content.read</code> und <code>files.content.write</code>.</p>
     <label><span>APP KEY</span><input type="text" id="key" value="${esc(localStorage.getItem('vm.dropbox.key') || '')}"></label>
     <label><span>ORDNER IN DER DROPBOX</span>
-      <input type="text" id="pfad" value="${esc(localStorage.getItem('vm.dropbox.pfad') || '/Astrid/001 Mein kleines Erbe')}"></label>
+      <input type="text" id="pfad" value="${esc(localStorage.getItem('vm.dropbox.pfad') || '/Tom Sauermann/001 Mein kleines Erbe')}"></label>
     <div class="reihe"><button class="knopf stark" id="ok">Anmelden</button>
       <button class="knopf" id="zur">Zurück</button></div></div>`));
   k.querySelector('#ok').onclick = () => {
